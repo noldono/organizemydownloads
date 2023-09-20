@@ -1,6 +1,10 @@
 import os
 import zipfile
 
+"""
+    Gets all files in a particular path, returns a list of paths
+"""
+
 def getAllFilesInPath(path: str):
     list_of_files = []
     downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
@@ -11,6 +15,11 @@ def getAllFilesInPath(path: str):
             list_of_files.append(file_path)
 
     return list_of_files
+
+"""
+    Archives all files in a given path
+    TODO: Change path to be dynamic, not just downloads folder
+"""
 
 def archiveAll(list_of_files, archive_name = "ArchivedDownloadsFolder.zip") -> None:
     file_paths = getAllFilesInPath("test") # TODO: Fix the path stuff
