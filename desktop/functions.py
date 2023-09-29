@@ -1,32 +1,35 @@
 import os
 import zipfile
+from file import File
+from datetime import date
 
 """
     Gets all files in a particular path, returns a list of paths
 """
 
+
 def getAllFilesInPath(path: str):
     list_of_files = []
     downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
-    for root, dirs, files in os.walk(downloads_folder):
+    path_to_traverse = downloads_folder if path == "" else path
+
+    for root, dirs, files in os.walk(path_to_traverse):
         for file in files:
             # Join the current directory path with the file name to get the full file path
             file_path = os.path.join(root, file)
-            list_of_files.append(file_path)
+            list_of_files.append(File(file_path))
 
     return list_of_files
 
+
 """
     Archives all files in a given path
-    TODO: Change path to be dynamic, not just downloads folder
 """
 
-def archiveAll(list_of_files, archive_name = "ArchivedDownloadsFolder.zip") -> None:
-    file_paths = getAllFilesInPath("test") # TODO: Fix the path stuff
+
+def archiveAll(list_of_files, archive_name=f"downloads_archive_{date.today()}.zip") -> None:
     with zipfile.ZipFile(archive_name, "w") as archive:
-        for path in file_paths:
-            archive.write(path)
+        for file in list_of_files:
+            archive.write(file.path)
 
     print(f"Archive '{archive_name}' created successfully.")
-
-
