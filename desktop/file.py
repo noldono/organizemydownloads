@@ -1,6 +1,10 @@
 import os
 import send2trash
+from enum import Enum
 
+class Action(Enum):
+    DELETE = 0
+    ARCHIVE = 1
 
 class File:
     """
