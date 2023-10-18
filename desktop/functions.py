@@ -1,6 +1,7 @@
 import os
 import zipfile
 from file import File
+from file import Action
 from datetime import date
 
 """
@@ -33,3 +34,20 @@ def archiveAll(list_of_files, archive_name=f"downloads_archive_{date.today()}.zi
             archive.write(file.path)
 
     print(f"Archive '{archive_name}' created successfully.")
+
+"""
+    Marks all installers for deletion
+    Any file names that are of type .exe and contain the words 'setup' and 'install' will be eligible for removal
+    Will return an updated list of files with items marked for deletion
+"""
+
+def removeInstallers(list_of_files) -> list:
+    substrings = ['setup', 'install', 'windows', 'win']
+    for file in list_of_files:
+        contains_substring = any(substring in file.name.lower() for substring in substrings)
+        if file.type == 'exe' and contains_substring:
+            file.action = Action.DELETE
+
+    return list_of_files
+
+
