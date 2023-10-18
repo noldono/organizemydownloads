@@ -16,6 +16,7 @@ class File:
         self.name = os.path.basename(path)
         self.size = os.path.getsize(path)
         _, self.type = os.path.splitext(self.name)
+        self.name = self.name.strip(self.type)
         self.type = self.type.strip('.')
         self.last_accessed = os.path.getatime(path)
         self.action = action
