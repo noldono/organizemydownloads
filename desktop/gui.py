@@ -5,7 +5,8 @@ from file import File
 import sys
 import datetime
 import functions
-
+import time
+from datetime import date
 
 class MainWindow(QMainWindow):
 
@@ -66,7 +67,7 @@ class MainWindow(QMainWindow):
 
         # add "Backup" menu with actions
         backup_menu = self.menu_bar.addMenu("Backup")
-        backup_menu.addAction("Backup Downloads Folder")
+        backup_menu.addAction("Backup Downloads Folder").triggered.connect(self._archive_all)
         backup_menu.addAction("Restore Backup")
 
         # add "Select" menu with actions
@@ -93,10 +94,26 @@ class MainWindow(QMainWindow):
         for row in range(self.table.rowCount()):
             checkbox_item = self.table.item(row, 4)
             if checkbox_item.checkState() == Qt.CheckState.Checked:
-                key = self.table.item(row, 1).text()
-                files_to_delete.append(self.files[key])
+                path = self.table.item(row, 1).text()
+                files_to_delete.append(self.files[path])
 
         functions.delete_files(files_to_delete)
+
+    def _archive_all(self):
+        self.popup = QMessageBox()
+        self.popup.setWindowTitle("Archive Status")
+        self.popup.setText("Archive Started")
+        self.popup.show()
+
+        self.thread = ArchiveThread(self.files.values())
+        self.thread.finished.connect(self._archive_finished)
+        self.thread.start()
+
+    def _archive_finished(self):
+        self.popup = QMessageBox()
+        self.popup.setWindowTitle("Archive Status")
+        self.popup.setText(f"Archive Finished! Saved as downloads_archive_{date.today()}.zip")
+        self.popup.show()
 
     def _init_table(self, header_labels: list[str]):
         # initialize table with correct number of columns
@@ -138,10 +155,14 @@ class MainWindow(QMainWindow):
 
         return checkbox
 
-    @staticmethod
-    def _update_file_flag(file, state):
-        # Update the boolean flag inside the File object
-        if state == Qt.Checked:
-            file.checked = True
-        else:
-            file.checked = False
+class ArchiveThread(QThread):
+    finished = pyqtSignal()
+
+    def __init__(self, arg):
+        super().__init__()
+        self.arg = arg
+
+    def run(self):
+        # Simulate a time-consuming operation
+        functions.archive_all(self.arg)
+        self.finished.emit()
