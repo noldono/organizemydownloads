@@ -1,10 +1,13 @@
 import os
 import send2trash
+import datetime
 from enum import Enum
+
 
 class Action(Enum):
     DELETE = 0
     ARCHIVE = 1
+
 
 class File:
     """
@@ -19,6 +22,7 @@ class File:
         self.name = self.name.strip(self.type)
         self.type = self.type.strip('.')
         self.last_accessed = os.path.getatime(path)
+        self.last_accessed_formatted = datetime.datetime.fromtimestamp(self.last_accessed).strftime('%Y/%m/%d %H:%M')
         self.action = action
 
     """
@@ -27,11 +31,11 @@ class File:
 
     def __str__(self):
         return (
-            f"File: {self.name}\n"
+            f"File Name: {self.name}\n"
             f"Path: {self.path}\n"
             f"Size: {self.size} bytes\n"
             f"Type: {self.type}\n"
-            f"Last Accessed: {self.last_accessed}"
+            f"Last Accessed: {self.last_accessed_formatted}"
         )
 
     """
