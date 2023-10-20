@@ -80,13 +80,13 @@ class MainWindow(QMainWindow):
 
     def _select_all(self):
         for row in range(self.table.rowCount()):
-            checkbox_item = self.table.item(row, 3)
+            checkbox_item = self.table.item(row, 4)
             if checkbox_item:
                 checkbox_item.setCheckState(Qt.Checked)
 
     def _deselect_all(self):
         for row in range(self.table.rowCount()):
-            checkbox_item = self.table.item(row, 3)
+            checkbox_item = self.table.item(row, 4)
             if checkbox_item:
                 checkbox_item.setCheckState(Qt.Unchecked)
 
