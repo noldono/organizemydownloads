@@ -1,164 +1,130 @@
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-
-#from layout_colorwidget import Color
-
+from file import File
 import sys
-
-import os
-import send2trash
 import datetime
-import numpy as np
-
-
-class File:
-    """
-    Initializes a file object with the given path
-    """
-
-    def __init__(self, path, action=""):
-        self.path = path
-        self.name = os.path.basename(path)
-        self.size = os.path.getsize(path)
-        _, self.type = os.path.splitext(self.name)
-        self.type = self.type.strip('.')
-        self.last_accessed = np.round(os.path.getatime(path))
-        self.action = action
-
-    """
-    Returns a string representation of the file object
-    """
-
-    def __str__(self):
-        return (
-            f"File: {self.name}\n"
-            f"Path: {self.path}\n"
-            f"Size: {self.size} bytes\n"
-            f"Type: {self.type}\n"
-            f"Last Accessed: {str(datetime.datetime.fromtimestamp(np.round(self.last_accessed)))}"
-        )
-
-    """
-    Recycles the file at the given path
-    Returns true if successful, false otherwise
-    """
-
-    def recycle(self):
-        try:
-            send2trash.send2trash(self.path)
-            return True
-        except send2trash.TrashPermissionError or OSError:
-            return False
-
-    """
-    Deletes the file at the given path
-    Returns true if successful, false otherwise
-    """
-
-    def delete(self):
-        try:
-            os.remove(self.path)
-            return True
-        except OSError:
-            return False
-
-    """
-    Gets the action for the file
-    """
-
-    def getaction(self):
-        return self.action
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, display_files, *args, **kwargs):
 
+    def __init__(self, display_files, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
-        Box_layout = QHBoxLayout()
+        # initialize window
+        self._init_window()
 
-        # Get screen size
-        screen = app.primaryScreen()
-        size = screen.size()
-        width = size.width()
-        height = size.height()
+        # initialize layout
+        self.central_layout = QVBoxLayout(self)
 
-        pageLayout = QVBoxLayout()
-        button_layout = QHBoxLayout()
-        self.stackLayout = QStackedLayout()
+        # initialize menu bar
+        self._init_menu_bar()
 
-        pageLayout.addLayout(button_layout)
-        pageLayout.addLayout(self.stackLayout)
+        # initialize table
+        self._init_table(["Filename", "Size", "Date Accessed", "Selected"])
 
-        def activate_tab_1():
-            self.stackLayout.setCurrentIndex(0)
+        # initialize display files
+        self._init_display_files(display_files)
 
-        # def activate_tab_2():
-        #     self.stacklayout.setCurrentIndex(1)
-        #
-        # def activate_tab_3():
-        #     self.stacklayout.setCurrentIndex(2)
-
-        btn = QPushButton("red")
-        btn.clicked.connect(activate_tab_1)
-        button_layout.addWidget(btn)
-
-        # btn = QPushButton("green")
-        # btn.pressed.connect(self.activate_tab_2)
-        # button_layout.addWidget(btn)
-        # self.stacklayout.addWidget(Color("green"))
-        #
-        # btn = QPushButton("yellow")
-        # btn.pressed.connect(self.activate_tab_3)
-        # button_layout.addWidget(btn)
-        # self.stacklayout.addWidget(Color("yellow"))
-
-        # Set the window size to half of the screen resolution
-        self.resize((width // 3) * 2, (height // 3)*2)
-
-        self.setWindowTitle("OrganizeMyDownloads")
-
-        self.table = QTableWidget()
-        self.table.setRowCount(0)
-        self.table.setColumnCount(3)
-        self.table.setHorizontalHeaderLabels(["Filename", "Size", "Date accessed"])
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
-        self.table.horizontalHeader().setSortIndicatorShown(True)
-        self.table.horizontalHeader().sortIndicatorChanged.connect(self.sort_table)
-
-        self.display_files = display_files
-
-        # sample_files = [
-        #     {"name": "fileA.txt", "size": "12 KB"},
-        #     {"name": "fileB.txt", "size": "34 KB"},
-        #     {"name": "fileC.txt", "size": "23 KB"},
-        # ]
-
-        for file in display_files:
-            row_position = self.table.rowCount()
-            date_time = datetime.datetime.fromtimestamp(file.last_accessed).strftime('%Y/%m/%d %H:%M')
-            self.table.insertRow(row_position)
-            self.table.setItem(row_position, 0, QTableWidgetItem(file.name))
-            self.table.setItem(row_position, 1, QTableWidgetItem(str(file.size)))
-            self.table.setItem(row_position, 2, QTableWidgetItem(date_time))
-            # self.table.setItem(row_position, 3, QTableWidgetItem(file["size"]))
-
-        #Box_layout.addWidget(self.table, alignment=None)
-        self.stackLayout.addWidget(self.table)
-
-        #self.setCentralWidget(self.table)
-        widget = QWidget()
-        widget.setLayout(pageLayout)
+        # set central widget layout
+        widget = QWidget(self)
+        widget.setLayout(self.central_layout)
         self.setCentralWidget(widget)
 
-    def sort_table(self, column, order):
-        self.table.sortItems(column, order)
+    def _init_window(self):
+        # set window title
+        self.setWindowTitle("OrganizeMyDownloads")
+
+        # get screen resolution
+        resolution = QDesktopWidget().screenGeometry()
+
+        # window size is 2/3 of screen resolution
+        window_width = 2 * (resolution.width() // 3)
+        window_height = 2 * (resolution.height() // 3)
+
+        self.resize(window_width, window_height)
+
+    def _init_menu_bar(self):
+        # initialize menu bar
+        self.menu_bar = QMenuBar(self)
+
+        # TODO: connect menu actions to functions as demonstrated below with 'Select All' and 'Deselect All'
+
+        # add "Identify" menu with actions
+        identify_menu = self.menu_bar.addMenu("Identify")
+        identify_menu.addAction("Identify Duplicate Files")
+        identify_menu.addAction("Identify Installers")
+
+        # add "Delete" menu with actions
+        delete_menu = self.menu_bar.addMenu("Delete")
+        delete_menu.addAction("Delete Currently Selected Files")
+
+        # add "Backup" menu with actions
+        backup_menu = self.menu_bar.addMenu("Backup")
+        backup_menu.addAction("Backup Downloads Folder")
+        backup_menu.addAction("Restore Backup")
+
+        # add "Select" menu with actions
+        select_menu = self.menu_bar.addMenu("Select")
+        select_menu.addAction("Select All").triggered.connect(self._select_all)
+        select_menu.addAction("Deselect All").triggered.connect(self._deselect_all)
+
+        self.central_layout.addWidget(self.menu_bar)
+
+    def _select_all(self):
+        for row in range(self.table.rowCount()):
+            checkbox_item = self.table.item(row, 3)
+            if checkbox_item:
+                checkbox_item.setCheckState(Qt.Checked)
+
+    def _deselect_all(self):
+        for row in range(self.table.rowCount()):
+            checkbox_item = self.table.item(row, 3)
+            if checkbox_item:
+                checkbox_item.setCheckState(Qt.Unchecked)
+
+    def _init_table(self, header_labels: list[str]):
+        # initialize table with correct number of columns
+        self.table = QTableWidget(self)
+        self.table.setColumnCount(len(header_labels))
+
+        # set column names (header labels)
+        self.table.setHorizontalHeaderLabels(header_labels)
+
+        # make table span entire window width
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+
+        # make table sortable
+        self.table.horizontalHeader().setSortIndicatorShown(True)
+        self.table.horizontalHeader().sortIndicatorChanged.connect(self.table.sortItems)
+
+        # add table to central layout
+        self.central_layout.addWidget(self.table)
+
+    def _init_display_files(self, display_files: list[File]):
+        # each row contains file name, size, last accessed date, and a checkbox
+        for file in display_files:
+            row = self.table.rowCount()
+            date_time = datetime.datetime.fromtimestamp(file.last_accessed).strftime('%Y/%m/%d %H:%M')
+            self.table.insertRow(row)
+            self.table.setItem(row, 0, QTableWidgetItem(f"{file.name}.{file.type}"))
+            self.table.setItem(row, 1, QTableWidgetItem(f"{file.size} bytes"))
+            self.table.setItem(row, 2, QTableWidgetItem(date_time))
+            self.table.setItem(row, 3, self._create_checkbox())
+
+    def _create_checkbox(self):
+        # create a checkbox to be used in the table
+        # TODO: figure out how to center the checkbox in the table cell
+        checkbox = QTableWidgetItem()
+        checkbox.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+        checkbox.setCheckState(Qt.Unchecked)
+        checkbox.setTextAlignment(Qt.AlignCenter)
+        return checkbox
 
 
-newFile1 = File("C:/Users/evanj/Desktop/Senior/Fall 23/4574 Large Software/OrganizeMyDownloads/test1.txt")
-newFile2 = File("C:/Users/evanj/Desktop/Senior/Fall 23/4574 Large Software/OrganizeMyDownloads/test2.txt")
-newFile3 = File("C:/Users/evanj/Desktop/Senior/Fall 23/4574 Large Software/OrganizeMyDownloads/test3.txt")
+newFile1 = File("C:\\Users\\Adam\\Downloads\\test\\a.txt")
+newFile2 = File("C:\\Users\\Adam\\Downloads\\test\\b.txt")
+newFile3 = File("C:\\Users\\Adam\\Downloads\\test\\c.txt")
 
 print(str(newFile1.last_accessed))
 

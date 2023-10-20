@@ -41,7 +41,7 @@ def get_duplicates(files):
                 continue
 
             # if file names do not follow the Windows duplicate file name convention, skip
-            # example: 'file.txt' and 'file (1).txt.'
+            # example: 'file.txt' and 'file (1).txt'
             if file.name not in unique_file.name and unique_file.name not in file.name:
                 continue
 
