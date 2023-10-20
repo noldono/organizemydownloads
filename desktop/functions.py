@@ -54,10 +54,35 @@ def remove_installers(list_of_files) -> list:
 
 
 """
-    Removes any checked files
+    Removes any files from given list
 """
 
 
 def delete_files(files: list[File]):
     for file in files:
         file.delete()
+
+
+"""
+    Format a file size to a human-readable string.
+
+    File size ranges:
+    - Less than 1 KB: Displays in bytes.
+    - Between 1 KB and 1 MB: Displays in KB.
+    - Between 1 MB and 1 GB: Displays in MB.
+    - 1 GB or greater: Displays in GB.
+
+    :param size_in_bytes: File size in bytes.
+    :return: Formatted size as a string.
+"""
+
+
+def format_file_size(size_in_bytes: float):
+    if size_in_bytes < 1024:
+        return f"{size_in_bytes} bytes"
+    elif size_in_bytes < 1024 * 1024:
+        return f"{size_in_bytes / 1024:.2f} KB"
+    elif size_in_bytes < 1024 * 1024 * 1024:
+        return f"{size_in_bytes / (1024 * 1024):.2f} MB"
+    else:
+        return f"{size_in_bytes / (1024 * 1024 * 1024):.2f} GB"

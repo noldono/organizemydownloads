@@ -8,6 +8,7 @@ import functions
 import time
 from datetime import date
 
+
 class MainWindow(QMainWindow):
 
     def __init__(self, path, *args, **kwargs):
@@ -124,7 +125,10 @@ class MainWindow(QMainWindow):
         self.table.setHorizontalHeaderLabels(header_labels)
 
         # make table span entire window width
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
+        self.table.setColumnWidth(0, 600)
+
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
 
         # make table sortable
         self.table.horizontalHeader().setSortIndicatorShown(True)
@@ -138,10 +142,15 @@ class MainWindow(QMainWindow):
         for file in display_files.values():
             row = self.table.rowCount()
             date_time = datetime.datetime.fromtimestamp(file.last_accessed).strftime('%Y/%m/%d %H:%M')
+
+            size_item = SortUserRoleItem()
+            size_item.setData(Qt.DisplayRole, functions.format_file_size(file.size))
+            size_item.setData(Qt.UserRole, file.size)  # Set the size in bytes as user data
+
             self.table.insertRow(row)
             self.table.setItem(row, 0, QTableWidgetItem(f"{file.name}.{file.type}"))
             self.table.setItem(row, 1, QTableWidgetItem(f"{file.path}"))
-            self.table.setItem(row, 2, QTableWidgetItem(f"{file.size} bytes"))
+            self.table.setItem(row, 2, size_item)
             self.table.setItem(row, 3, QTableWidgetItem(date_time))
             self.table.setItem(row, 4, self._create_checkbox())
 
@@ -155,6 +164,7 @@ class MainWindow(QMainWindow):
 
         return checkbox
 
+
 class ArchiveThread(QThread):
     finished = pyqtSignal()
 
@@ -166,3 +176,8 @@ class ArchiveThread(QThread):
         # Simulate a time-consuming operation
         functions.archive_all(self.arg)
         self.finished.emit()
+
+
+class SortUserRoleItem(QTableWidgetItem):
+    def __lt__(self, other):
+        return self.data(Qt.UserRole) < other.data(Qt.UserRole)
