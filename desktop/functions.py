@@ -9,8 +9,8 @@ from datetime import date
 """
 
 
-def getAllFilesInPath(path: str):
-    list_of_files = []
+def get_all_files_in_path(path: str) -> dict:
+    all_files = {}
     downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
     path_to_traverse = downloads_folder if path == "" else path
 
@@ -18,9 +18,9 @@ def getAllFilesInPath(path: str):
         for file in files:
             # Join the current directory path with the file name to get the full file path
             file_path = os.path.join(root, file)
-            list_of_files.append(File(file_path))
+            all_files[file_path] = File(file_path)
 
-    return list_of_files
+    return all_files
 
 
 """
@@ -28,12 +28,13 @@ def getAllFilesInPath(path: str):
 """
 
 
-def archiveAll(list_of_files, archive_name=f"downloads_archive_{date.today()}.zip") -> None:
+def archive_all(list_of_files, archive_name=f"downloads_archive_{date.today()}.zip") -> None:
     with zipfile.ZipFile(archive_name, "w") as archive:
         for file in list_of_files:
             archive.write(file.path)
 
     print(f"Archive '{archive_name}' created successfully.")
+
 
 """
     Marks all installers for deletion
@@ -41,7 +42,8 @@ def archiveAll(list_of_files, archive_name=f"downloads_archive_{date.today()}.zi
     Will return an updated list of files with items marked for deletion
 """
 
-def removeInstallers(list_of_files) -> list:
+
+def remove_installers(list_of_files) -> list:
     substrings = ['setup', 'install', 'windows', 'win']
     for file in list_of_files:
         contains_substring = any(substring in file.name.lower() for substring in substrings)
@@ -51,3 +53,11 @@ def removeInstallers(list_of_files) -> list:
     return list_of_files
 
 
+"""
+    Removes any checked files
+"""
+
+
+def delete_files(files: list[File]):
+    for file in files:
+        file.delete()

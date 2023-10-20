@@ -23,7 +23,7 @@ class File:
         self.type = self.type.strip('.')
         self.last_accessed = os.path.getatime(path)
         self.last_accessed_formatted = datetime.datetime.fromtimestamp(self.last_accessed).strftime('%Y/%m/%d %H:%M')
-        self.action = action
+        self.checked = False
 
     """
     Returns a string representation of the file object
@@ -58,13 +58,7 @@ class File:
     def delete(self):
         try:
             os.remove(self.path)
+            print(f"Removed {self.name}")
             return True
         except OSError:
             return False
-
-    """
-    Gets the action for the file
-    """
-
-    def getaction(self):
-        return self.action
