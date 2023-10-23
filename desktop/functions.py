@@ -29,9 +29,9 @@ def get_all_files_in_path(path: str) -> dict:
 
 
 def archive_all(list_of_files, archive_name=f"downloads_archive_{date.today()}.zip") -> None:
-    with zipfile.ZipFile(archive_name, "w") as archive:
+    with zipfile.ZipFile(archive_name, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         for file in list_of_files:
-            archive.write(file.path)
+            archive.write(file.path, os.path.relpath(file.path, os.path.commonpath([f.path for f in list_of_files])))
 
     print(f"Archive '{archive_name}' created successfully.")
 
