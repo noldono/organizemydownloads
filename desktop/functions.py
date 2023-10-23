@@ -4,6 +4,11 @@ from file import File
 from file import Action
 from datetime import date
 
+##for copy to folder
+import shutil
+from PyQt5.QtWidgets import QFileDialog
+##
+
 """
     Gets all files in a particular path, returns a list of paths
 """
@@ -86,3 +91,88 @@ def format_file_size(size_in_bytes: float):
         return f"{size_in_bytes / (1024 * 1024):.2f} MB"
     else:
         return f"{size_in_bytes / (1024 * 1024 * 1024):.2f} GB"
+
+
+"""
+search_by_extension:
+Searches given dict of file objects by extension
+
+:param files_dict: Dict of file paths to copy
+:return checked_dict: 
+"""
+
+
+def search_by_extension(files_dict, search: str) -> dict:
+
+    search_result_dict = {}
+
+    for key, file in files_dict.items():
+        if file.type == search:
+            #file.checked = True
+            search_result_dict[key] = file
+
+    return search_result_dict
+
+
+"""
+search_by_filename:
+Searches given dict of file objects by file name
+
+:param files_dict: Dict of file paths to copy
+:return checked_dict: 
+"""
+
+
+def search_by_filename(files_dict, search: str) -> dict:
+
+    search_result_dict = {}
+
+    for key, file in files_dict.items():
+        if search in file.name:
+            #file.checked = True
+            search_result_dict[key] = file
+
+    return search_result_dict
+
+
+"""
+get_selected:
+Gets file objects with 'True' checked values and returns new dict of them
+
+:param files_dict: Dict of file paths to copy
+:return checked_dict: 
+"""
+
+
+def get_selected(files_dict) -> dict:
+
+    checked_dict = {}
+
+    for key, file in files_dict.items():
+        if file.checked == True:
+            checked_dict[key] = file
+
+    return checked_dict
+
+
+"""
+Prompts the user to select a directory and copies the given files to that directory.
+
+:param files: Dict of file paths to copy
+:param destination_directory: 
+"""
+
+
+def copy_files_to_directory(destination_directory, files: dict):
+
+    if not destination_directory:
+        print("No directory selected. Exiting.")
+        return
+
+    for file_path, file in files.items():
+        try:
+            shutil.copy(file_path, destination_directory)
+            print(f"Successfully copied {file_path} to {destination_directory}")
+        except Exception as e:
+            print(f"Error copying {file_path}. Error: {e}")
+

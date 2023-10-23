@@ -20,18 +20,26 @@ class MainWindow(QMainWindow):
         # initialize layout
         self.central_layout = QVBoxLayout(self)
 
+        self.table = QTableWidget(self)
+
         # initialize menu bar
         self._init_menu_bar()
+
+        self.files = functions.get_all_files_in_path("")  # Empty string as argument means target downloads folder.
+
+        self.currentFiles = self.files
+
+        self._init_search_bar()
+
+        self._update_extensions()
+
+        self._init_copy_button()
 
         # initialize table
         self._init_table(["Filename", "Absolute Path", "Size", "Date Accessed", "Selected"])
 
-        # create dictionary with all files
-        # TODO: change this later
-        self.files = functions.get_all_files_in_path("")  # Empty string as argument means target downloads folder.
-
         # initialize display files
-        self._init_display_files(self.files)
+        self._display_files(self.files)
 
         # set central widget layout
         widget = QWidget(self)
@@ -78,6 +86,41 @@ class MainWindow(QMainWindow):
 
         self.central_layout.addWidget(self.menu_bar)
 
+    def _init_copy_button(self):
+        # initialize menu bar
+
+        # TODO: connect menu actions to functions as demonstrated below with 'Select All' and 'Deselect All'
+        # Create search button
+        self.copy_button = QPushButton("Copy selected files to folder", self)
+        self.copy_button.clicked.connect(self._copy_to_folder)
+
+        self.central_layout.addWidget(self.copy_button)
+
+
+    def _init_search_bar(self):
+        # initialize menu bar
+        self.search_bar = QLineEdit(self)
+
+        self.search_button = QPushButton("Search", self)
+        self.search_button.clicked.connect(self._filename_search)
+
+        search_layout = QHBoxLayout()
+        search_layout.addWidget(QLabel("Show:"))
+
+        # (drop-down menu)
+        self.comboBox = QComboBox()
+
+        # Connect the combo box signal to the search function
+        self.comboBox.currentTextChanged.connect(self._extension_search)
+
+        search_layout.addWidget(self.comboBox)
+        search_layout.addWidget(self.search_bar)
+        search_layout.addWidget(self.search_button)
+
+        search_layout.addStretch(1)
+
+        self.central_layout.addLayout(search_layout)
+
     def _select_all(self):
         for row in range(self.table.rowCount()):
             checkbox_item = self.table.item(row, 4)
@@ -118,7 +161,7 @@ class MainWindow(QMainWindow):
 
     def _init_table(self, header_labels: list[str]):
         # initialize table with correct number of columns
-        self.table = QTableWidget(self)
+
         self.table.setColumnCount(len(header_labels))
 
         # set column names (header labels)
@@ -134,25 +177,10 @@ class MainWindow(QMainWindow):
         self.table.horizontalHeader().setSortIndicatorShown(True)
         self.table.horizontalHeader().sortIndicatorChanged.connect(self.table.sortItems)
 
+        self.table.itemChanged.connect(self._item_changed)
+
         # add table to central layout
         self.central_layout.addWidget(self.table)
-
-    def _init_display_files(self, display_files: dict):
-        # each row contains file name, size, last accessed date, and a checkbox
-        for file in display_files.values():
-            row = self.table.rowCount()
-            date_time = datetime.datetime.fromtimestamp(file.last_accessed).strftime('%Y/%m/%d %H:%M')
-
-            size_item = SortUserRoleItem()
-            size_item.setData(Qt.DisplayRole, functions.format_file_size(file.size))
-            size_item.setData(Qt.UserRole, file.size)  # Set the size in bytes as user data
-
-            self.table.insertRow(row)
-            self.table.setItem(row, 0, QTableWidgetItem(f"{file.name}.{file.type}"))
-            self.table.setItem(row, 1, QTableWidgetItem(f"{file.path}"))
-            self.table.setItem(row, 2, size_item)
-            self.table.setItem(row, 3, QTableWidgetItem(date_time))
-            self.table.setItem(row, 4, self._create_checkbox())
 
     def _create_checkbox(self):
         # create a checkbox to be used in the table
@@ -163,6 +191,79 @@ class MainWindow(QMainWindow):
         checkbox.setTextAlignment(Qt.AlignCenter)
 
         return checkbox
+
+    def _display_files(self, display_files: dict):
+        # each row contains file name, size, last accessed date, and a checkbox
+        #self.table.clearContents()
+        self.table.setRowCount(0)
+
+        for file in display_files.values():
+            row = self.table.rowCount()
+            date_time = datetime.datetime.fromtimestamp(file.last_accessed).strftime('%Y/%m/%d %H:%M')
+
+            size_item = SortUserRoleItem()
+            size_item.setData(Qt.DisplayRole, functions.format_file_size(file.size))
+            size_item.setData(Qt.UserRole, file.size)  # Set the size in bytes as user data
+
+            self.table.insertRow(row)
+
+            file_name_item = QTableWidgetItem(f"{file.name}.{file.type}")
+            file_name_item.setData(Qt.UserRole, file)  # Store the file object reference
+
+            self.table.setItem(row, 0, file_name_item)
+            self.table.setItem(row, 1, QTableWidgetItem(f"{file.path}"))
+            self.table.setItem(row, 2, size_item)
+            self.table.setItem(row, 3, QTableWidgetItem(date_time))
+            self.table.setItem(row, 4, self._create_checkbox())
+
+    def _item_changed(self, item):
+        # Check if the changed item is in the checkbox column
+        if item.column() == 4:
+            file_item = self.table.item(item.row(), 0)
+            file_object = file_item.data(Qt.UserRole)
+
+            # Update the file object based on the checkbox state
+            if item.checkState() == Qt.Checked:
+                file_object.checked = True
+            else:
+                file_object.checked = False
+
+    def _update_extensions(self):
+        # return list of all extension
+
+        ext = []
+
+        for file in self.currentFiles.values():
+            if file.type not in ext:
+                ext.append(file.type)
+
+        self.comboBox.clear()
+        self.comboBox.addItem("All")
+        self.comboBox.addItems(ext)
+
+    def _extension_search(self, search_string):
+        if search_string == "All":
+            self._display_files(self.files)
+            self.currentFiles = self.files
+        else:
+            self.currentFiles = functions.search_by_extension(self.currentFiles, search_string)
+            self._display_files(self.currentFiles)
+
+    def _filename_search(self, search_string):
+        search_string = self.search_bar.text()
+        if search_string == "":
+            self._display_files(self.files)
+            self.currentFiles = self.files
+        else:
+            self.currentFiles = functions.search_by_filename(self.currentFiles, search_string)
+            self._display_files(self.currentFiles)
+
+    # To decide: cut vs. copy
+    def _copy_to_folder(self):
+        # Prompt the user to select a directory
+        dst_dir = QFileDialog.getExistingDirectory(None, "Select Destination Directory")
+        selectedDict = functions.get_selected(self.currentFiles)
+        functions.copy_files_to_directory(dst_dir, selectedDict)
 
 
 class ArchiveThread(QThread):
@@ -181,3 +282,5 @@ class ArchiveThread(QThread):
 class SortUserRoleItem(QTableWidgetItem):
     def __lt__(self, other):
         return self.data(Qt.UserRole) < other.data(Qt.UserRole)
+
+
