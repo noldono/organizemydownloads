@@ -7,6 +7,7 @@ from datetime import date
 ##for copy to folder
 import shutil
 from PyQt5.QtWidgets import QFileDialog
+
 ##
 
 """
@@ -19,11 +20,22 @@ def get_all_files_in_path(path: str) -> dict:
     downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
     path_to_traverse = downloads_folder if path == "" else path
 
+    # Get the depth of the downloads folder
+    # Example: C:\\Users\\Administrator\\Downloads
+    # After split: ['C', 'Users', 'Administrator', 'Downloads']
+    # Length: 4
+    downloads_folder_depth = len(downloads_folder.split(os.sep))
+
     for root, dirs, files in os.walk(path_to_traverse):
-        for file in files:
-            # Join the current directory path with the file name to get the full file path
-            file_path = os.path.join(root, file)
-            all_files[file_path] = File(file_path)
+        # Subtract the depth of the downloads folder from the depth of the path to get the relative depth
+        depth = len(root.split(os.sep)) - downloads_folder_depth
+
+        # We only care about files that are at most 1 subfolder deep (from the Downloads folder)
+        if depth <= 1:
+            for file in files:
+                # Join the current directory path with the file name to get the full file path
+                file_path = os.path.join(root, file)
+                all_files[file_path] = File(file_path)
 
     return all_files
 
@@ -48,14 +60,27 @@ def archive_all(list_of_files, archive_name=f"downloads_archive_{date.today()}.z
 """
 
 
-def remove_installers(list_of_files) -> list:
+def remove_installers(list_of_files) -> list[File]:
     substrings = ['setup', 'install', 'windows', 'win']
+    installer_types = ['exe', 'msi']
     for file in list_of_files:
         contains_substring = any(substring in file.name.lower() for substring in substrings)
-        if file.type == 'exe' and contains_substring:
+        if file.type in installer_types and contains_substring:
             file.action = Action.DELETE
 
     return list_of_files
+
+
+def identify_installers(list_of_files) -> list[File]:
+    substrings = ['setup', 'install', 'windows', 'win']
+    installer_types = ['exe', 'msi']
+    installers = []
+    for file in list_of_files:
+        contains_substring = any(substring in file.name.lower() for substring in substrings)
+        if file.type in installer_types and contains_substring:
+            installers.append(file)
+
+    return installers
 
 
 """
@@ -85,12 +110,14 @@ def delete_files(files: list[File]):
 def format_file_size(size_in_bytes: float):
     if size_in_bytes < 1024:
         return f"{size_in_bytes} bytes"
-    elif size_in_bytes < 1024 * 1024:
+
+    if size_in_bytes < 1024 ** 2:
         return f"{size_in_bytes / 1024:.2f} KB"
-    elif size_in_bytes < 1024 * 1024 * 1024:
-        return f"{size_in_bytes / (1024 * 1024):.2f} MB"
-    else:
-        return f"{size_in_bytes / (1024 * 1024 * 1024):.2f} GB"
+
+    if size_in_bytes < 1024 ** 3:
+        return f"{size_in_bytes / (1024 ** 2):.2f} MB"
+
+    return f"{size_in_bytes / (1024 ** 3):.2f} GB"
 
 
 """
@@ -103,12 +130,11 @@ Searches given dict of file objects by extension
 
 
 def search_by_extension(files_dict, search: str) -> dict:
-
     search_result_dict = {}
 
     for key, file in files_dict.items():
         if file.type == search:
-            #file.checked = True
+            # file.checked = True
             search_result_dict[key] = file
 
     return search_result_dict
@@ -124,12 +150,11 @@ Searches given dict of file objects by file name
 
 
 def search_by_filename(files_dict, search: str) -> dict:
-
     search_result_dict = {}
 
     for key, file in files_dict.items():
         if search in file.name:
-            #file.checked = True
+            # file.checked = True
             search_result_dict[key] = file
 
     return search_result_dict
@@ -145,11 +170,10 @@ Gets file objects with 'True' checked values and returns new dict of them
 
 
 def get_selected(files_dict) -> dict:
-
     checked_dict = {}
 
     for key, file in files_dict.items():
-        if file.checked == True:
+        if file.checked:
             checked_dict[key] = file
 
     return checked_dict
@@ -164,7 +188,6 @@ Prompts the user to select a directory and copies the given files to that direct
 
 
 def copy_files_to_directory(destination_directory, files: dict):
-
     if not destination_directory:
         print("No directory selected. Exiting.")
         return
@@ -175,4 +198,3 @@ def copy_files_to_directory(destination_directory, files: dict):
             print(f"Successfully copied {file_path} to {destination_directory}")
         except Exception as e:
             print(f"Error copying {file_path}. Error: {e}")
-

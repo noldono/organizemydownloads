@@ -1,12 +1,12 @@
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from file import File
-import sys
-import datetime
-import functions
-import time
 from datetime import date
+
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QDesktopWidget, QMenuBar, QPushButton, QLineEdit, \
+    QHBoxLayout, QLabel, QComboBox, QMessageBox, QTableWidgetItem, QFileDialog
+
+import functions
+import organize
+from filetable import FileTable
 
 
 class MainWindow(QMainWindow):
@@ -19,8 +19,6 @@ class MainWindow(QMainWindow):
 
         # initialize layout
         self.central_layout = QVBoxLayout(self)
-
-        self.table = QTableWidget(self)
 
         # initialize menu bar
         self._init_menu_bar()
@@ -35,11 +33,11 @@ class MainWindow(QMainWindow):
 
         self._init_copy_button()
 
-        # initialize table
-        self._init_table(["Filename", "Absolute Path", "Size", "Date Accessed", "Selected"])
+        # initialize file table
+        self.table = FileTable(self.files)
 
-        # initialize display files
-        self._display_files(self.files)
+        # add file table to layout
+        self.central_layout.addWidget(self.table)
 
         # set central widget layout
         widget = QWidget(self)
@@ -63,12 +61,10 @@ class MainWindow(QMainWindow):
         # initialize menu bar
         self.menu_bar = QMenuBar(self)
 
-        # TODO: connect menu actions to functions as demonstrated below with 'Select All' and 'Deselect All'
-
         # add "Identify" menu with actions
         identify_menu = self.menu_bar.addMenu("Identify")
-        identify_menu.addAction("Identify Duplicate Files")
-        identify_menu.addAction("Identify Installers")
+        identify_menu.addAction("Identify Duplicate Files").triggered.connect(self._identify_duplicates)
+        identify_menu.addAction("Identify Installers").triggered.connect(self._identify_installers)
 
         # add "Delete" menu with actions
         delete_menu = self.menu_bar.addMenu("Delete")
@@ -86,16 +82,20 @@ class MainWindow(QMainWindow):
 
         self.central_layout.addWidget(self.menu_bar)
 
-    def _init_copy_button(self):
-        # initialize menu bar
+    def _identify_installers(self):
+        installers = functions.identify_installers(self.files.values())
+        self.table.select_files(installers)
 
-        # TODO: connect menu actions to functions as demonstrated below with 'Select All' and 'Deselect All'
+    def _identify_duplicates(self):
+        duplicate_files = organize.get_duplicates(self.files.values())
+        self.table.select_files(duplicate_files)
+
+    def _init_copy_button(self):
         # Create search button
         self.copy_button = QPushButton("Copy selected files to folder", self)
         self.copy_button.clicked.connect(self._copy_to_folder)
 
         self.central_layout.addWidget(self.copy_button)
-
 
     def _init_search_bar(self):
         # initialize menu bar
@@ -111,7 +111,7 @@ class MainWindow(QMainWindow):
         self.comboBox = QComboBox()
 
         # Connect the combo box signal to the search function
-        self.comboBox.currentTextChanged.connect(self._extension_search)
+        # self.comboBox.currentTextChanged.connect(self._extension_search)
 
         search_layout.addWidget(self.comboBox)
         search_layout.addWidget(self.search_bar)
@@ -122,26 +122,13 @@ class MainWindow(QMainWindow):
         self.central_layout.addLayout(search_layout)
 
     def _select_all(self):
-        for row in range(self.table.rowCount()):
-            checkbox_item = self.table.item(row, 4)
-            if checkbox_item:
-                checkbox_item.setCheckState(Qt.Checked)
+        self.table.select_all()
 
     def _deselect_all(self):
-        for row in range(self.table.rowCount()):
-            checkbox_item = self.table.item(row, 4)
-            if checkbox_item:
-                checkbox_item.setCheckState(Qt.Unchecked)
+        self.table.deselect_all()
 
     def _delete_selected(self):
-        files_to_delete = []
-        for row in range(self.table.rowCount()):
-            checkbox_item = self.table.item(row, 4)
-            if checkbox_item.checkState() == Qt.CheckState.Checked:
-                path = self.table.item(row, 1).text()
-                files_to_delete.append(self.files[path])
-
-        functions.delete_files(files_to_delete)
+        functions.delete_files(self.table.get_selected_files())
 
     def _archive_all(self):
         self.popup = QMessageBox()
@@ -159,29 +146,6 @@ class MainWindow(QMainWindow):
         self.popup.setText(f"Archive Finished! Saved as downloads_archive_{date.today()}.zip")
         self.popup.show()
 
-    def _init_table(self, header_labels: list[str]):
-        # initialize table with correct number of columns
-
-        self.table.setColumnCount(len(header_labels))
-
-        # set column names (header labels)
-        self.table.setHorizontalHeaderLabels(header_labels)
-
-        # make table span entire window width
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
-        self.table.setColumnWidth(0, 600)
-
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
-
-        # make table sortable
-        self.table.horizontalHeader().setSortIndicatorShown(True)
-        self.table.horizontalHeader().sortIndicatorChanged.connect(self.table.sortItems)
-
-        self.table.itemChanged.connect(self._item_changed)
-
-        # add table to central layout
-        self.central_layout.addWidget(self.table)
-
     def _create_checkbox(self):
         # create a checkbox to be used in the table
         # TODO: figure out how to center the checkbox in the table cell
@@ -191,30 +155,6 @@ class MainWindow(QMainWindow):
         checkbox.setTextAlignment(Qt.AlignCenter)
 
         return checkbox
-
-    def _display_files(self, display_files: dict):
-        # each row contains file name, size, last accessed date, and a checkbox
-        #self.table.clearContents()
-        self.table.setRowCount(0)
-
-        for file in display_files.values():
-            row = self.table.rowCount()
-            date_time = datetime.datetime.fromtimestamp(file.last_accessed).strftime('%Y/%m/%d %H:%M')
-
-            size_item = SortUserRoleItem()
-            size_item.setData(Qt.DisplayRole, functions.format_file_size(file.size))
-            size_item.setData(Qt.UserRole, file.size)  # Set the size in bytes as user data
-
-            self.table.insertRow(row)
-
-            file_name_item = QTableWidgetItem(f"{file.name}.{file.type}")
-            file_name_item.setData(Qt.UserRole, file)  # Store the file object reference
-
-            self.table.setItem(row, 0, file_name_item)
-            self.table.setItem(row, 1, QTableWidgetItem(f"{file.path}"))
-            self.table.setItem(row, 2, size_item)
-            self.table.setItem(row, 3, QTableWidgetItem(date_time))
-            self.table.setItem(row, 4, self._create_checkbox())
 
     def _item_changed(self, item):
         # Check if the changed item is in the checkbox column
@@ -282,5 +222,3 @@ class ArchiveThread(QThread):
 class SortUserRoleItem(QTableWidgetItem):
     def __lt__(self, other):
         return self.data(Qt.UserRole) < other.data(Qt.UserRole)
-
-
