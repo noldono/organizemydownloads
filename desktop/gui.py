@@ -217,8 +217,3 @@ class ArchiveThread(QThread):
         # Simulate a time-consuming operation
         functions.archive_all(self.arg)
         self.finished.emit()
-
-
-class SortUserRoleItem(QTableWidgetItem):
-    def __lt__(self, other):
-        return self.data(Qt.UserRole) < other.data(Qt.UserRole)

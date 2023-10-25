@@ -36,7 +36,8 @@ class FileTable(QTableWidget):
             file_name_item = QTableWidgetItem(f"{file.name}.{file.type}")
             file_name_item.setData(Qt.UserRole, file)  # Store the file object reference
 
-            size_item = QTableWidgetItem(format_file_size(file.size))
+            size_item = SortUserRoleItem()
+            size_item.setData(Qt.DisplayRole, format_file_size(file.size))
             size_item.setData(Qt.UserRole, file.size)  # Set the size in bytes as user data
 
             self.setItem(row, 0, file_name_item)
@@ -90,3 +91,7 @@ class FileTable(QTableWidget):
             self.item(row, 4).setCheckState(Qt.Unchecked)
 
         self._selected_files = {}
+
+class SortUserRoleItem(QTableWidgetItem):
+    def __lt__(self, other):
+        return self.data(Qt.UserRole) < other.data(Qt.UserRole)
