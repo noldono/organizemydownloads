@@ -3,6 +3,7 @@ from datetime import date
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QDesktopWidget, QMenuBar, QPushButton, QLineEdit, \
     QHBoxLayout, QLabel, QComboBox, QMessageBox, QTableWidgetItem, QFileDialog
+from PyQt5.QtGui import QIcon
 
 import functions
 import organize
@@ -28,6 +29,8 @@ class MainWindow(QMainWindow):
         self.currentFiles = self.files
 
         self._init_search_bar()
+
+        self._init_refresh_button()
 
         self._update_extensions()
 
@@ -105,8 +108,8 @@ class MainWindow(QMainWindow):
         self.search_button = QPushButton("Search", self)
         self.search_button.clicked.connect(self._filename_search)
 
-        search_layout = QHBoxLayout()
-        search_layout.addWidget(QLabel("Show:"))
+        self.search_layout = QHBoxLayout()
+        self.search_layout.addWidget(QLabel("Show:"))
 
         # (drop-down menu)
         self.comboBox = QComboBox()
@@ -114,13 +117,22 @@ class MainWindow(QMainWindow):
         # Connect the combo box signal to the search function
         # self.comboBox.currentTextChanged.connect(self._extension_search)
 
-        search_layout.addWidget(self.comboBox)
-        search_layout.addWidget(self.search_bar)
-        search_layout.addWidget(self.search_button)
+        self.search_layout.addWidget(self.comboBox)
+        self.search_layout.addWidget(self.search_bar)
+        self.search_layout.addWidget(self.search_button)
 
-        search_layout.addStretch(1)
+        self.search_layout.addStretch(1)
 
-        self.central_layout.addLayout(search_layout)
+        self.central_layout.addLayout(self.search_layout)
+
+    def _refresh_table(self):
+        self.files = functions.get_all_files_in_path("")
+        self.table.update_table_contents(list(self.files.values()))
+
+    def _init_refresh_button(self):
+        self.refresh_button = QPushButton(QIcon.fromTheme("view-refresh"), "Refresh")
+        self.refresh_button.clicked.connect(self._refresh_table)
+        self.search_layout.addWidget(self.refresh_button)
 
     def _select_all(self):
         self.table.select_all()

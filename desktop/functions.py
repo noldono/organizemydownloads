@@ -101,7 +101,6 @@ def recycle_files(files: list[File]):
     for file in files:
         file.recycle()
 
-
 """
     Format a file size to a human-readable string.
 
