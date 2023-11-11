@@ -69,6 +69,7 @@ class MainWindow(QMainWindow):
         # add "Delete" menu with actions
         delete_menu = self.menu_bar.addMenu("Delete")
         delete_menu.addAction("Delete Currently Selected Files").triggered.connect(self._delete_selected)
+        delete_menu.addAction("Recycle Currently Selected Files").triggered.connect(self._recycle_selected)
 
         # add "Backup" menu with actions
         backup_menu = self.menu_bar.addMenu("Backup")
@@ -130,6 +131,9 @@ class MainWindow(QMainWindow):
     def _delete_selected(self):
         functions.delete_files(self.table.get_selected_files())
 
+    def _recycle_selected(self):
+        functions.recycle_files(self.table.get_selected_files())
+
     def _archive_all(self):
         self.popup = QMessageBox()
         self.popup.setWindowTitle("Archive Status")
@@ -158,7 +162,7 @@ class MainWindow(QMainWindow):
 
     def _item_changed(self, item):
         # Check if the changed item is in the checkbox column
-        if item.column() == 4:
+        if item.column() == 5:
             file_item = self.table.item(item.row(), 0)
             file_object = file_item.data(Qt.UserRole)
 

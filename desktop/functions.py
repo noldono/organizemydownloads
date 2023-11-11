@@ -92,6 +92,15 @@ def delete_files(files: list[File]):
     for file in files:
         file.delete()
 
+"""
+    Recycles any files from given list
+"""
+
+
+def recycle_files(files: list[File]):
+    for file in files:
+        file.recycle()
+
 
 """
     Format a file size to a human-readable string.

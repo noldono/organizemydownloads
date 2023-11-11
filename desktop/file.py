@@ -22,7 +22,9 @@ class File:
         self.name = self.name.strip(self.type)
         self.type = self.type.strip('.')
         self.last_accessed = os.path.getatime(path)
+        self.date_added = os.path.getctime(path)
         self.last_accessed_formatted = datetime.datetime.fromtimestamp(self.last_accessed).strftime('%Y/%m/%d %H:%M')
+        self.date_added_formatted = datetime.datetime.fromtimestamp(self.date_added).strftime('%Y/%m/%d %H:%M')
         self.checked = False
 
     """

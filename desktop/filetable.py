@@ -3,7 +3,7 @@ from PyQt5.QtCore import Qt
 from file import File
 from functions import format_file_size
 
-HEADER_LABELS = ["Filename", "Absolute Path", "Size", "Date Accessed", "Selected"]
+HEADER_LABELS = ["Filename", "Absolute Path", "Size", "Date Last Accessed", "Date Added", "Selected"]
 
 
 class FileTable(QTableWidget):
@@ -22,6 +22,7 @@ class FileTable(QTableWidget):
         self.setHorizontalHeaderLabels(HEADER_LABELS)
         self.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
         self.setColumnWidth(0, 600)
+        self.setColumnWidth(3, 120)
         self.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.horizontalHeader().setSortIndicatorShown(True)
         self.horizontalHeader().sortIndicatorChanged.connect(self.sortItems)
@@ -44,7 +45,8 @@ class FileTable(QTableWidget):
             self.setItem(row, 1, QTableWidgetItem(file.path))
             self.setItem(row, 2, size_item)
             self.setItem(row, 3, QTableWidgetItem(file.last_accessed_formatted))
-            self.setItem(row, 4, self._create_checkbox())
+            self.setItem(row, 4, QTableWidgetItem(file.date_added_formatted))
+            self.setItem(row, 5, self._create_checkbox())
 
     def get_displayed_files(self) -> list[File]:
         return list(self.displayed_files.values())
@@ -58,7 +60,7 @@ class FileTable(QTableWidget):
         return checkbox
 
     def _handle_user_selection(self, item):
-        if item.column() != 4:
+        if item.column() != 5:
             return
 
         file = self.item(item.row(), 0).data(Qt.UserRole)
@@ -74,7 +76,7 @@ class FileTable(QTableWidget):
         for row in range(self.rowCount()):
             file = self.item(row, 0).data(Qt.UserRole)
             if file in files_to_select:
-                self.item(row, 4).setCheckState(Qt.Checked)
+                self.item(row, 5).setCheckState(Qt.Checked)
                 self._selected_files[file.path] = file
 
     def get_selected_files(self) -> list[File]:
@@ -82,13 +84,13 @@ class FileTable(QTableWidget):
 
     def select_all(self):
         for row in range(self.rowCount()):
-            self.item(row, 4).setCheckState(Qt.Checked)
+            self.item(row, 5).setCheckState(Qt.Checked)
 
         self._selected_files = self._all_files
 
     def deselect_all(self):
         for row in range(self.rowCount()):
-            self.item(row, 4).setCheckState(Qt.Unchecked)
+            self.item(row, 5).setCheckState(Qt.Unchecked)
 
         self._selected_files = {}
 
