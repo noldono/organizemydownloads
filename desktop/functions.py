@@ -45,7 +45,7 @@ def get_all_files_in_path(path: str) -> dict:
 """
 
 
-def archive_all(list_of_files, archive_name=f"downloads_archive_{date.today()}.zip") -> None:
+def archive_all(list_of_files: list[File], archive_name=f"downloads_archive_{date.today()}.zip") -> None:
     with zipfile.ZipFile(archive_name, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         for file in list_of_files:
             archive.write(file.path, os.path.relpath(file.path, os.path.commonpath([f.path for f in list_of_files])))
@@ -60,7 +60,7 @@ def archive_all(list_of_files, archive_name=f"downloads_archive_{date.today()}.z
 """
 
 
-def remove_installers(list_of_files) -> list[File]:
+def remove_installers(list_of_files: list[File]) -> list[File]:
     substrings = ['setup', 'install', 'windows', 'win']
     installer_types = ['exe', 'msi']
     for file in list_of_files:
@@ -71,7 +71,7 @@ def remove_installers(list_of_files) -> list[File]:
     return list_of_files
 
 
-def identify_installers(list_of_files) -> list[File]:
+def identify_installers(list_of_files: list[File]) -> list[File]:
     substrings = ['setup', 'install', 'windows', 'win']
     installer_types = ['exe', 'msi']
     installers = []
@@ -92,6 +92,7 @@ def delete_files(files: list[File]):
     for file in files:
         file.delete()
 
+
 """
     Recycles any files from given list
 """
@@ -100,6 +101,7 @@ def delete_files(files: list[File]):
 def recycle_files(files: list[File]):
     for file in files:
         file.recycle()
+
 
 """
     Format a file size to a human-readable string.
@@ -137,7 +139,7 @@ Searches given dict of file objects by extension
 """
 
 
-def search_by_extension(files_dict, search: str) -> dict:
+def search_by_extension(files_dict: dict[str, File], search: str) -> dict:
     search_result_dict = {}
 
     for key, file in files_dict.items():
@@ -157,7 +159,7 @@ Searches given dict of file objects by file name
 """
 
 
-def search_by_filename(files_dict, search: str) -> dict:
+def search_by_filename(files_dict: dict[str, File], search: str) -> dict:
     search_result_dict = {}
 
     for key, file in files_dict.items():
@@ -177,7 +179,7 @@ Gets file objects with 'True' checked values and returns new dict of them
 """
 
 
-def get_selected(files_dict) -> dict:
+def get_selected(files_dict: dict[str, File]) -> dict:
     checked_dict = {}
 
     for key, file in files_dict.items():
@@ -195,7 +197,7 @@ Prompts the user to select a directory and copies the given files to that direct
 """
 
 
-def copy_files_to_directory(destination_directory, files: dict):
+def copy_files_to_directory(destination_directory: str, files: dict):
     if not destination_directory:
         print("No directory selected. Exiting.")
         return

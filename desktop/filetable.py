@@ -30,6 +30,7 @@ class FileTable(QTableWidget):
 
     def update_table_contents(self, files_to_display: list[File]):
         self.setRowCount(0)
+        self.displayed_files = {}
         for file in files_to_display:
             row = self.rowCount()
             self.insertRow(row)
@@ -47,6 +48,7 @@ class FileTable(QTableWidget):
             self.setItem(row, 3, QTableWidgetItem(file.last_accessed_formatted))
             self.setItem(row, 4, QTableWidgetItem(file.date_added_formatted))
             self.setItem(row, 5, self._create_checkbox())
+            self.displayed_files[file.path] = file
 
     def get_displayed_files(self) -> list[File]:
         return list(self.displayed_files.values())
@@ -94,6 +96,7 @@ class FileTable(QTableWidget):
 
         self._selected_files = {}
 
+
 class SortUserRoleItem(QTableWidgetItem):
-    def __lt__(self, other):
+    def __lt__(self, other: QTableWidgetItem) -> bool:
         return self.data(Qt.UserRole) < other.data(Qt.UserRole)
