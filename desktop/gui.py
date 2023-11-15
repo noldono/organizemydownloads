@@ -84,7 +84,29 @@ class MainWindow(QMainWindow):
         select_menu.addAction("Select All").triggered.connect(self._select_all)
         select_menu.addAction("Deselect All").triggered.connect(self._deselect_all)
 
+        # add "Organize" menu with actions
+        organize_menu = self.menu_bar.addMenu("Organize")
+        organize_menu.addAction("Organize Into Folders Based on File Type").triggered.connect(self._organize)
+
         self.central_layout.addWidget(self.menu_bar)
+
+    def _organize(self):
+        warning_str = '''
+        Please read before proceeding!
+        
+        The following function will move all of the files inside your downloads folder into different subdirectories within the downloads folder. We HIGHLY recommend you backup your downloads folder prior to this procedure. You can do this by going to Backup > Backup Downloads Folder. 
+        
+        Are you sure you wish to proceed?
+        '''
+        self.msg = QMessageBox()
+        self.msg.setWindowTitle("WARNING")
+        self.msg.setText(warning_str)
+        self.msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        ret = self.msg.exec_()
+
+        if ret == QMessageBox.Yes:
+            organize.organize_into_folders(self.files.values())
+
 
     def _identify_installers(self):
         installers = functions.identify_installers(self.files.values())
