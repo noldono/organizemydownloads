@@ -28,16 +28,16 @@ class MainWindow(QMainWindow):
 
         self.currentFiles = self.files
 
+        self._init_copy_button()
+
+        # initialize file table
+        self.table = FileTable(self.files)
+
         self._init_search_bar()
 
         self._init_refresh_button()
 
         self._update_extensions()
-
-        self._init_copy_button()
-
-        # initialize file table
-        self.table = FileTable(self.files)
 
         # add file table to layout
         self.central_layout.addWidget(self.table)
@@ -109,7 +109,7 @@ class MainWindow(QMainWindow):
 
 
     def _identify_installers(self):
-        installers = functions.identify_installers(self.files.values())
+        installers = functions.identify_installers(list(self.files.values()))
         self.table.select_files(installers)
 
     def _identify_duplicates(self):
@@ -137,7 +137,7 @@ class MainWindow(QMainWindow):
         self.comboBox = QComboBox()
 
         # Connect the combo box signal to the search function
-        # self.comboBox.currentTextChanged.connect(self._extension_search)
+        self.comboBox.currentTextChanged.connect(self._extension_search)
 
         self.search_layout.addWidget(self.comboBox)
         self.search_layout.addWidget(self.search_bar)
@@ -219,22 +219,21 @@ class MainWindow(QMainWindow):
         self.comboBox.addItem("All")
         self.comboBox.addItems(ext)
 
-    def _extension_search(self, search_string):
-        if search_string == "All":
-            self._display_files(self.files)
-            self.currentFiles = self.files
+    def _extension_search(self, search_string: str):
+        if search_string == 'All':
+            self.table.update_table_contents(list(self.files.values()))
         else:
-            self.currentFiles = functions.search_by_extension(self.currentFiles, search_string)
-            self._display_files(self.currentFiles)
+            files_to_display = functions.search_by_extension(self.files, search_string)
+            self.table.update_table_contents(list(files_to_display.values()))
 
-    def _filename_search(self, search_string):
+    def _filename_search(self):
         search_string = self.search_bar.text()
-        if search_string == "":
-            self._display_files(self.files)
-            self.currentFiles = self.files
+        if not search_string:
+            self.table.update_table_contents(list(self.files.values()))
         else:
-            self.currentFiles = functions.search_by_filename(self.currentFiles, search_string)
-            self._display_files(self.currentFiles)
+            # TODO: currently search_by_filename() is case-sensitive, we have to decide if we want to change that or not
+            files_to_display = functions.search_by_filename(self.files, search_string)
+            self.table.update_table_contents(list(files_to_display.values()))
 
     # To decide: cut vs. copy
     def _copy_to_folder(self):
