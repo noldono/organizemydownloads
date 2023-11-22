@@ -15,15 +15,30 @@ class File:
     """
 
     def __init__(self, path, action=""):
+        # self.path = path
+        # self.name = os.path.basename(path)
+        # self.size = os.path.getsize(path)
+        # _, self.type = os.path.splitext(self.name)
+        # self.name = self.name.strip(self.type)
+        # self.type = self.type.strip('.')
+        # self.last_accessed = os.path.getatime(path)
+        # self.date_added = os.path.getctime(path)
+        # self.last_accessed_formatted = datetime.datetime.fromtimestamp(self.last_accessed).strftime('%Y/%m/%d %H:%M')
+        # self.date_added_formatted = datetime.datetime.fromtimestamp(self.date_added).strftime('%Y/%m/%d %H:%M')
+        # self.checked = False
         self.path = path
-        self.name = os.path.basename(path)
-        self.size = os.path.getsize(path)
-        _, self.type = os.path.splitext(self.name)
-        self.name = self.name.strip(self.type)
+        self.name, self.type = os.path.splitext(os.path.basename(path))
         self.type = self.type.strip('.')
+        self.size = os.path.getsize(path)
         self.last_accessed = os.path.getatime(path)
-        self.last_accessed_formatted = datetime.datetime.fromtimestamp(self.last_accessed).strftime('%Y/%m/%d %H:%M')
-        self.action = action
+        self.date_added = os.path.getctime(path)
+        self.last_accessed_formatted = datetime.datetime.fromtimestamp(self.last_accessed).strftime(
+            '%Y/%m/%d %H:%M'
+        )
+        self.date_added_formatted = datetime.datetime.fromtimestamp(self.date_added).strftime(
+            '%Y/%m/%d %H:%M'
+        )
+        self.checked = False
 
     """
     Returns a string representation of the file object
@@ -58,13 +73,7 @@ class File:
     def delete(self):
         try:
             os.remove(self.path)
+            print(f"Removed {self.name}")
             return True
         except OSError:
             return False
-
-    """
-    Gets the action for the file
-    """
-
-    def getaction(self):
-        return self.action
