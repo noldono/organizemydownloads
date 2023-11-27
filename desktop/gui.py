@@ -48,12 +48,12 @@ class MainWindow(QMainWindow):
 
         self.currentFiles = self.files
 
-        self._init_copy_button()
-
         # initialize file table
         self.table = FileTable(self.files)
 
         self._init_search_bar()
+
+        self._init_copy_button()
 
         self._init_refresh_button()
 
@@ -186,10 +186,10 @@ class MainWindow(QMainWindow):
 
     def _init_copy_button(self):
         # Create search button
-        self.copy_button = QPushButton("Copy selected files to folder", self)
+        self.copy_button = QPushButton("   Copy selected files to folder   ", self)
         self.copy_button.clicked.connect(self._copy_to_folder)
 
-        self.central_layout.addWidget(self.copy_button)
+        self.search_layout.addWidget(self.copy_button)
 
     def _init_search_bar(self):
         # initialize menu bar

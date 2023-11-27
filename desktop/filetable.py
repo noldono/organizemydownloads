@@ -3,7 +3,12 @@ from PyQt5.QtCore import Qt
 from file import File
 from functions import format_file_size
 
-HEADER_LABELS = ["Filename", "Absolute Path", "Size", "Date Last Accessed", "Date Added", "Selected"]
+HEADER_LABELS = ["Filename", "Location", "Size", "Date Last Accessed", "Date Added", "Selected"]
+
+
+def _get_file_location(file: File) -> str:
+    length_to_strip = len(file.name) + 1 + len(file.type)
+    return file.path[:-length_to_strip]
 
 
 class FileTable(QTableWidget):
@@ -18,46 +23,75 @@ class FileTable(QTableWidget):
         self.update_table_contents(list(files.values()))
 
     def _initialize_table_properties(self):
+        # Set up header labels
         self.setColumnCount(len(HEADER_LABELS))
         self.setHorizontalHeaderLabels(HEADER_LABELS)
-        self.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
-        self.setColumnWidth(0, 600)
-        self.setColumnWidth(3, 120)
-        self.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+
+        # Set column widths
+        self.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        for column in range(1, len(HEADER_LABELS)):
+            self.horizontalHeader().setSectionResizeMode(column, QHeaderView.ResizeToContents)
+
+        # Set up sorting
         self.horizontalHeader().setSortIndicatorShown(True)
         self.horizontalHeader().sortIndicatorChanged.connect(self.sortItems)
         self.itemChanged.connect(self._handle_user_selection)
 
+        # Connect checkbox to file selection
+        self.itemChanged.connect(self._handle_user_selection)
+
     def update_table_contents(self, files_to_display: list[File]):
+        # Clear previous contents
         self.setRowCount(0)
-        self.displayed_files = {}
-        for file in files_to_display:
-            row = self.rowCount()
+        self.displayed_files.clear()
+
+        # Display new files
+        for row, file in enumerate(files_to_display):
             self.insertRow(row)
 
-            file_name_item = QTableWidgetItem(f"{file.name}.{file.type}")
-            file_name_item.setData(Qt.UserRole, file)  # Store the file object reference
+            row_items = self._get_widgets_from_file(file)
+            for column, item in enumerate(row_items):
+                self.setItem(row, column, item)
 
-            size_item = SortUserRoleItem()
-            size_item.setData(Qt.DisplayRole, format_file_size(file.size))
-            size_item.setData(Qt.UserRole, file.size)  # Set the size in bytes as user data
-
-            self.setItem(row, 0, file_name_item)
-            self.setItem(row, 1, QTableWidgetItem(file.path))
-            self.setItem(row, 2, size_item)
-            self.setItem(row, 3, QTableWidgetItem(file.last_accessed_formatted))
-            self.setItem(row, 4, QTableWidgetItem(file.date_added_formatted))
-            self.setItem(row, 5, self._create_checkbox())
             self.displayed_files[file.path] = file
+
+    def _get_widgets_from_file(self, file: File) -> list[QTableWidgetItem]:
+        widgets: list[QTableWidgetItem] = list()
+
+        name_widget = QTableWidgetItem(f"{file.name}.{file.type}")
+        name_widget.setData(Qt.UserRole, file)  # Store the file object reference
+        widgets.append(name_widget)
+
+        location_widget = QTableWidgetItem(_get_file_location(file))
+        widgets.append(location_widget)
+
+        size_widget = SortUserRoleItem()
+        size_widget.setData(Qt.DisplayRole, format_file_size(file.size))
+        size_widget.setData(Qt.UserRole, file.size)  # Set the size in bytes as user data
+        size_widget.setTextAlignment(Qt.AlignCenter)
+        widgets.append(size_widget)
+
+        last_accessed_widget = QTableWidgetItem(file.last_accessed_formatted)
+        last_accessed_widget.setTextAlignment(Qt.AlignCenter)
+        widgets.append(last_accessed_widget)
+
+        date_added_widget = QTableWidgetItem(file.date_added_formatted)
+        date_added_widget.setTextAlignment(Qt.AlignCenter)
+        widgets.append(date_added_widget)
+
+        checkbox_widget = self._create_checkbox()
+        checkbox_widget.setTextAlignment(Qt.AlignCenter)
+        widgets.append(checkbox_widget)
+
+        return widgets
 
     def get_displayed_files(self) -> list[File]:
         return list(self.displayed_files.values())
 
-    def _create_checkbox(self):
+    def _create_checkbox(self) -> QTableWidgetItem:
         checkbox = QTableWidgetItem()
         checkbox.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
         checkbox.setCheckState(Qt.Unchecked)
-        checkbox.setTextAlignment(Qt.AlignCenter)
 
         return checkbox
 
