@@ -80,6 +80,8 @@ class FileTable(QTableWidget):
         widgets.append(date_added_widget)
 
         checkbox_widget = self._create_checkbox()
+        if file.path in self._selected_files.keys():
+            checkbox_widget.setCheckState(Qt.Checked)
         checkbox_widget.setTextAlignment(Qt.AlignCenter)
         widgets.append(checkbox_widget)
 
@@ -121,14 +123,14 @@ class FileTable(QTableWidget):
     def select_all(self):
         for row in range(self.rowCount()):
             self.item(row, 5).setCheckState(Qt.Checked)
-
-        self._selected_files = self._all_files
+            file = self.item(row, 0).data(Qt.UserRole)
+            self._selected_files[file.path] = file
 
     def deselect_all(self):
         for row in range(self.rowCount()):
             self.item(row, 5).setCheckState(Qt.Unchecked)
-
-        self._selected_files = {}
+            file = self.item(row, 0).data(Qt.UserRole)
+            self._selected_files.pop(file.path, None)
 
 
 class SortUserRoleItem(QTableWidgetItem):
