@@ -1,22 +1,33 @@
 import os
-import zipfile
-from file import File
-from file import Action
-from datetime import date
-
-##for copy to folder
 import shutil
-from PyQt5.QtWidgets import QFileDialog
+import zipfile
+from datetime import date, datetime, timedelta
 
-##
+from file import Action
+from file import File
+
+import operator
+
+directory_dict = {
+    "Images": ["png", "jpg", "jpeg", "gif", "bmp", "tiff", "svg", "icns", "heic"],
+    "Documents": ["doc", "docx", "pdf", "txt", "odt", "rtf", "pages"],
+    "Audio": ["mp3", "wav", "wma", "aac", "flac", "ogg", "aiff", "m4a"],
+    "Video": ["mp4", "avi", "mov", "wmv", "flv", "mpeg", "m4v"],
+    "Spreadsheets": ["xlsx", "xlsm", "xls", "ods", "numbers", "csv"],
+    "Presentations": ["pptx", "ppt", "ppsx", "odp", "key"],
+    "Code": ["py", "java", "c", "cpp", "html", "css", "js", "swift", "asm", "tpp", "h", "s"],
+    "Archives": ["zip", "rar", "7z", "tar", "gz"],
+    "Executables": ["exe", "dmg", "pkg", "app", "msi", "jar"],
+    "Fonts": ["ttf", "otf", "woff2", "ttc", "dfont"],
+}
 
 """
     Gets all files in a particular path, returns a list of paths
 """
 
 
-def get_all_files_in_path(path: str) -> dict:
-    all_files = {}
+def get_all_files_in_path(path: str) -> dict[str, File]:
+    all_files: dict[str, File] = dict()
     downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
     path_to_traverse = downloads_folder if path == "" else path
 
@@ -31,11 +42,13 @@ def get_all_files_in_path(path: str) -> dict:
         depth = len(root.split(os.sep)) - downloads_folder_depth
 
         # We only care about files that are at most 1 subfolder deep (from the Downloads folder)
-        if depth <= 1:
-            for file in files:
-                # Join the current directory path with the file name to get the full file path
-                file_path = os.path.join(root, file)
-                all_files[file_path] = File(file_path)
+        if depth > 1:
+            continue
+
+        for file in files:
+            # Join the current directory path with the file name to get the full file path
+            file_path = os.path.join(root, file)
+            all_files[file_path] = File(file_path)
 
     return all_files
 
@@ -81,6 +94,24 @@ def identify_installers(list_of_files: list[File]) -> list[File]:
             installers.append(file)
 
     return installers
+
+
+def identify_old_files(list_of_files: list[File], threshold: timedelta) -> list[File]:
+    """
+    Returns a list of files that have not been created or accessed within the given threshold
+    """
+    old_files: list[File] = list()
+
+    current_datetime = datetime.now()
+
+    for file in list_of_files:
+        date_added_delta = current_datetime - datetime.fromtimestamp(file.date_added)
+        last_accessed_delta = current_datetime - datetime.fromtimestamp(file.last_accessed)
+
+        if date_added_delta > threshold and last_accessed_delta > threshold:
+            old_files.append(file)
+
+    return old_files
 
 
 """
@@ -144,7 +175,6 @@ def search_by_extension(files_dict: dict[str, File], search: str) -> dict:
 
     for key, file in files_dict.items():
         if file.type == search:
-            # file.checked = True
             search_result_dict[key] = file
 
     return search_result_dict
@@ -163,8 +193,7 @@ def search_by_filename(files_dict: dict[str, File], search: str) -> dict:
     search_result_dict = {}
 
     for key, file in files_dict.items():
-        if search in file.name:
-            # file.checked = True
+        if search.lower() in file.name.lower():
             search_result_dict[key] = file
 
     return search_result_dict
@@ -208,3 +237,87 @@ def copy_files_to_directory(destination_directory: str, files: dict):
             print(f"Successfully copied {file_path} to {destination_directory}")
         except Exception as e:
             print(f"Error copying {file_path}. Error: {e}")
+
+
+def identify_large_files(file_list: list[File], size_threshold: int) -> list[File]:
+    large_files: list[File] = list()
+    for file in file_list:
+        if file.size > size_threshold:
+            large_files.append(file)
+
+    return large_files
+
+
+def organize_into_folders(files: list[File]) -> None:
+    for file in files:
+        downloads_folder = os.path.dirname(file.path)
+        organized = False
+
+        # Make sure current file isn't nested in a directory in the Downloads folder.
+        if downloads_folder.endswith("Downloads"):
+            for category, types in directory_dict.items():
+                if file.type.lower() in types:
+                    if not os.path.exists(f"{downloads_folder}\\{category}"):
+                        os.makedirs(f"{downloads_folder}\\{category}")
+                    dst = downloads_folder + f'\\{category}\\{file.name}.{file.type}'
+                    shutil.move(file.path, dst)
+                    organized = True
+                    break
+
+            if not organized:
+                if not os.path.exists(f"{downloads_folder}\\Other"):
+                    os.makedirs(f"{downloads_folder}\\Other")
+                dst = downloads_folder + f'\\Other\\{file.name}.{file.type}'
+                shutil.move(file.path, dst)
+
+
+"""
+    Sort the list of files by one of their attributes
+"""
+
+
+def sortByAttribute(list_of_files, attribute, descending=False):
+    attributes = ["name", "size", "type", "last_accessed"]
+
+    if attribute in attributes:
+        # Define a mapping of attribute names to corresponding operators
+        attribute_mapping = {
+            "name": operator.attrgetter("name"),
+            "size": operator.attrgetter("size"),
+            "type": operator.attrgetter("type"),
+            "last_accessed": operator.attrgetter("last_accessed")
+        }
+
+        # Sort the list of files based on the selected attribute
+        if descending:
+            list_of_files = sorted(list_of_files, key=attribute_mapping[attribute], reverse=True)
+        else:
+            list_of_files = sorted(list_of_files, key=attribute_mapping[attribute])
+
+        return list_of_files
+
+    return list_of_files
+
+
+def get_duplicates(files) -> list[File]:
+    duplicates = []
+    seen = {}
+
+    for file in files:
+        file_key = (file.type, file.size)
+        if file_key not in seen:
+            seen[file_key] = [file]
+            continue
+
+        for seen_file in seen[file_key]:
+            if file.name in seen_file.name:
+                duplicates.append(seen_file)
+                break
+
+            if seen_file.name in file.name:
+                duplicates.append(file)
+                break
+
+        seen[file_key].append(file)
+
+    return duplicates
