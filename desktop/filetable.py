@@ -79,6 +79,10 @@ class FileTable(QTableWidget):
         date_added_widget.setTextAlignment(Qt.AlignCenter)
         widgets.append(date_added_widget)
 
+        # Make every widget read-only except for the checkbox
+        for widget in widgets:
+            widget.setFlags(widget.flags() & ~Qt.ItemIsEditable)
+
         checkbox_widget = self._create_checkbox()
         if file.path in self._selected_files.keys():
             checkbox_widget.setCheckState(Qt.Checked)
