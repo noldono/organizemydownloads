@@ -28,7 +28,10 @@ python3 -m pip install -r requirements.txt
 ```
 3. Run the below command in the project directory
 
-```python3 run.py```
+```bash
+python3 run.py
+```
+
 4. Enjoy!
 
 ## How It Works
