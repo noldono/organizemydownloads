@@ -1,13 +1,3 @@
-import os
-import shutil
-import zipfile
-from datetime import date, datetime, timedelta
-
-from file import Action
-from file import File
-
-import operator
-
 """
 Description:
 This file contains various functions which may be used to assist in enabling
@@ -16,6 +6,15 @@ through these functions.
 
 Authors: Evan Donohoe, Adam Lahouar, Nolan Donovan
 """
+
+import operator
+import os
+import shutil
+import zipfile
+from datetime import date, datetime, timedelta
+
+from file import Action
+from file import File
 
 directory_dict = {
     "Images": ["png", "jpg", "jpeg", "gif", "bmp", "tiff", "svg", "icns", "heic"],

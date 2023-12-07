@@ -1,22 +1,22 @@
-from datetime import date, timedelta
-
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QDesktopWidget, QMenuBar, QPushButton, QLineEdit, \
-    QHBoxLayout, QLabel, QComboBox, QMessageBox, QTableWidgetItem, QFileDialog, QActionGroup, QMenu, QAction
-from PyQt5.QtGui import QIcon
-
-import functions
-from filetable import FileTable
-from file import File
-
 """
 Description:
 This file contains all of the GUI related code. Everything is under
 one class: MainWindow. Defined within MainWindow are various functions
-which connect to the FileTable object and the functions file. 
+which connect to the FileTable object and the functions file.
 
 Authors: Evan Donohoe, Nolan Donovan, Adam Lahouar
 """
+
+from datetime import date, timedelta
+
+from PyQt5.QtCore import *
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QDesktopWidget, QMenuBar, QPushButton, QLineEdit, \
+    QHBoxLayout, QLabel, QComboBox, QMessageBox, QTableWidgetItem, QFileDialog, QActionGroup, QMenu, QAction
+
+import functions
+from file import File
+from filetable import FileTable
 
 DATE_THRESHOLDS: dict[str, timedelta] = {
     "1 Month": timedelta(days=30),

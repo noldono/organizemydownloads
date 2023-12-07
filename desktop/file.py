@@ -1,7 +1,15 @@
-import os
-import send2trash
+"""
+Description:
+This file contains the File class that represents a file in the Downloads folder.
+
+Authors: Adam Lahouar, Nolan Donovan, Evan Donohoe
+"""
+
 import datetime
+import os
 from enum import Enum
+
+import send2trash
 
 
 class Action(Enum):

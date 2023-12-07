@@ -1,5 +1,14 @@
-from PyQt5.QtWidgets import QTableWidget, QHeaderView, QTableWidgetItem
+"""
+Description:
+This file contains the code for the FileTable class, which is used to unify the QTableWidget
+and the File class.
+
+Authors: Adam Lahouar, Evan Donohoe, Nolan Donovan
+"""
+
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QTableWidget, QHeaderView, QTableWidgetItem
+
 from file import File
 from functions import format_file_size
 
