@@ -8,6 +8,15 @@ from file import File
 
 import operator
 
+"""
+Description:
+This file contains various functions which may be used to assist in enabling
+the various features from the GUI. Most of the backend functionality occurs
+through these functions.
+
+Authors: Evan Donohoe, Adam Lahouar, Nolan Donovan
+"""
+
 directory_dict = {
     "Images": ["png", "jpg", "jpeg", "gif", "bmp", "tiff", "svg", "icns", "heic"],
     "Documents": ["doc", "docx", "pdf", "txt", "odt", "rtf", "pages"],

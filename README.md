@@ -21,9 +21,18 @@
 
 ## How to Run
 1. Clone the repository
-2. Run the below command in the project directory
-```python3 run.py```
-3. Enjoy!
+2. Run the below command to install dependencies
+
+```bash
+python3 -m pip install -r requirements.txt
+```
+3. Run the below command in the project directory
+
+```bash
+python3 run.py
+```
+
+4. Enjoy!
 
 ## How It Works
 The program will retireve a copy of your downloads folder and show all of the files within it. See the picture below

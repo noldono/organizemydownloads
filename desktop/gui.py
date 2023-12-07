@@ -6,9 +6,17 @@ from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QDesktopWidget, Q
 from PyQt5.QtGui import QIcon
 
 import functions
-# import organize
 from filetable import FileTable
 from file import File
+
+"""
+Description:
+This file contains all of the GUI related code. Everything is under
+one class: MainWindow. Defined within MainWindow are various functions
+which connect to the FileTable object and the functions file. 
+
+Authors: Evan Donohoe, Nolan Donovan, Adam Lahouar
+"""
 
 DATE_THRESHOLDS: dict[str, timedelta] = {
     "1 Month": timedelta(days=30),
