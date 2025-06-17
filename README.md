@@ -1,5 +1,5 @@
 # OrganizeMyDownloads
-
+A desktop application created in Python used to help users organize and keep track of all of the files they download!
 ## Table of Contents
 - [How to Run](#how-to-run)
 - [How It Works](#how-it-works)
